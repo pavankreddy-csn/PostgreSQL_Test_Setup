@@ -1,7 +1,7 @@
 
 # 🚀 PostgreSQL Lab with Patroni, HAProxy & Barman
 
-This project demonstrates a **complete High Availability (HA) and Disaster Recovery (DR) lab** for PostgreSQL, with open-source tools.  
+This project demonstrates a **complete High Availability (HA) using patroni/haproxy and Barman backups/PITR lab** for PostgreSQL, with open-source tools.  
 
 It’s designed as a **hands-on demo environment** for learning, testing, and showcasing skills in PostgreSQL clustering, failover, backups, and PITR.
 
