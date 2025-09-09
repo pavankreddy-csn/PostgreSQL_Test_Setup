@@ -32,7 +32,7 @@ services:
       - ./patroni/pg1.yml:/etc/patroni.yml
     ports:
       - "54321:5432"
-      - "8001:8008"
+      - "80081:8008"
     networks:
       - patroni_net
 
@@ -52,7 +52,7 @@ services:
       - ./patroni/pg2.yml:/etc/patroni.yml
     ports:
       - "54322:5432"
-      - "8002:8008"
+      - "80082:8008"
     depends_on:
       - pg1
     networks:
@@ -74,7 +74,7 @@ services:
       - ./patroni/pg3.yml:/etc/patroni.yml
     ports:
       - "54323:5432"
-      - "8003:8008"
+      - "80083:8008"
     depends_on:
       - pg1
       - pg2
