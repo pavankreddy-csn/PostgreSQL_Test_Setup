@@ -1,0 +1,78 @@
+[root@pavan-dba:~]$ git clone https://github.com/pavancsn/PostgreSQL_Test_Setup.git
+Cloning into 'PostgreSQL_Test_Setup'...
+remote: Enumerating objects: 26, done.
+remote: Counting objects: 100% (26/26), done.
+remote: Compressing objects: 100% (20/20), done.
+remote: Total 26 (delta 2), reused 26 (delta 2), pack-reused 0 (from 0)
+Receiving objects: 100% (26/26), 6.75 KiB | 6.75 MiB/s, done.
+Resolving deltas: 100% (2/2), done.
+[root@pavan-dba:~]$ ls -lrt
+total 36
+-rw-r--r--. 1 root root   24 Nov  8  2021 productname
+-rw-r--r--. 1 root root  420 Nov  8  2021 ks-post.log
+-rw-------. 1 root root 8760 Nov  8  2021 original-ks.cfg
+-rw-------. 1 root root 9147 Nov  8  2021 anaconda-ks.cfg
+-rw-r--r--  1 root root   24 Nov  8  2021 productname.at_restart
+drwxr-xr-x  2 root root    6 Jun 27 01:37 localai-models
+drwxr-xr-x  9 root root  158 Sep  9 03:42 PostgreSQL_Test_Setup
+[root@pavan-dba:~]$ cd PostgreSQL_Test_Setup/
+[root@pavan-dba:~]$  docker compose build
+[+] Building 162.0s (23/23) FINISHED                                                                 docker:default
+ => [patroni internal] load build definition from Dockerfile                                                   0.1s
+ => => transferring dockerfile: 401B                                                                           0.0s
+ => [app internal] load build definition from Dockerfile                                                       0.2s
+ => => transferring dockerfile: 225B                                                                           0.0s
+ => [barman internal] load build definition from Dockerfile                                                    0.2s
+ => => transferring dockerfile: 323B                                                                           0.0s
+ => [app internal] load metadata for docker.io/library/python:3.11-slim                                        1.6s
+ => [barman internal] load metadata for docker.io/library/debian:bookworm-slim                                 1.5s
+ => [app internal] load .dockerignore                                                                          0.2s
+ => => transferring context: 2B                                                                                0.0s
+ => [patroni internal] load .dockerignore                                                                      0.2s
+ => => transferring context: 2B                                                                                0.0s
+ => [barman internal] load .dockerignore                                                                       0.2s
+ => => transferring context: 2B                                                                                0.0s
+ => CACHED [app 1/5] FROM docker.io/library/python:3.11-slim@sha256:846f9ce7b7afd79c7b14e78835ffee20123eff370  0.0s
+ => [patroni 2/5] RUN apt-get update && apt-get install -y --no-install-recommends     postgresql-client     135.3s
+ => [app internal] load build context                                                                          0.0s
+ => => transferring context: 63B                                                                               0.0s
+ => CACHED [barman 1/2] FROM docker.io/library/debian:bookworm-slim@sha256:df52e55e3361a81ac1bead266f3373ee55  0.0s
+ => CACHED [app 2/5] WORKDIR /app                                                                              0.0s
+ => [barman 2/2] RUN apt-get update && apt-get install -y --no-install-recommends     barman     postgresql  103.2s
+ => [app 3/5] COPY requirements.txt /app/                                                                      0.1s
+ => [app 4/5] RUN pip install --no-cache-dir -r requirements.txt                                              11.9s
+ => [app 5/5] COPY app.py /app/                                                                                0.4s
+ => [app] exporting to image                                                                                   3.4s
+ => => exporting layers                                                                                        1.8s
+ => => writing image sha256:ff0fd44787c85f5221ebaa5ade9472501bcddd42bf6963dd79332f51ca37392c                   0.1s
+ => => naming to docker.io/library/postgresql_test_setup-app                                                   0.1s
+ => [barman] exporting to image                                                                                2.5s
+ => => exporting layers                                                                                        2.3s
+ => => writing image sha256:54c2db764623ef0f67a817fc0904a20a995c8c58753448baf0a50fae73eee618                   0.0s
+ => => naming to docker.io/library/postgresql_test_setup-barman                                                0.0s
+ => [patroni 3/5] RUN pip install patroni[consul] psycopg2-binary                                             18.8s
+ => [patroni 4/5] RUN useradd -ms /bin/bash patroni                                                            2.6s
+ => [patroni 5/5] WORKDIR /home/patroni                                                                        0.2s
+ => [patroni] exporting to image                                                                               2.6s
+ => => exporting layers                                                                                        2.5s
+ => => writing image sha256:6b61b1950ab692caae16966951e9a7d6a0b0696daffe29c28c0705f6728116d2                   0.0s
+ => => naming to docker.io/library/postgresql_test_setup-patroni    
+[root@pavan-dba:~]$docker compose up -d
+[+] Running 9/9
+ ✔ Container consul        Started                                                                             2.6s
+ ✔ Container patroni-base  Started                                                                             2.7s
+ ✔ Container pg1           Started                                                                             4.9s
+ ✔ Container pg2           Started                                                                             5.6s
+ ✔ Container pg3           Started                                                                             6.1s
+ ✔ Container haproxy       Started                                                                             9.2s
+ ✔ Container dbinit        Started                                                                            12.1s
+ ✔ Container app           Started                                                                            12.1s
+ ✔ Container barman        Started                 
+ [root@pavan-dba:~]$docker ps
+CONTAINER ID   IMAGE                       COMMAND                  CREATED         STATUS          PORTS                                                                                         NAMES
+febcfdba0dae   postgresql_test_setup-app   "gunicorn --bind 0.0…"   3 minutes ago   Up 18 seconds   0.0.0.0:8000->8000/tcp, :::8000->8000/tcp                                                     app
+df3e8c89dccc   haproxy:2.8                 "docker-entrypoint.s…"   3 minutes ago   Up 21 seconds   0.0.0.0:5432->5432/tcp, :::5432->5432/tcp                                                     haproxy
+eda170b049a1   postgres:16                 "docker-entrypoint.s…"   3 minutes ago   Up 24 seconds   0.0.0.0:54323->5432/tcp, :::54323->5432/tcp, 0.0.0.0:8003->8008/tcp, :::8003->8008/tcp        pg3
+b467a605faa6   postgres:16                 "docker-entrypoint.s…"   3 minutes ago   Up 24 seconds   0.0.0.0:54322->5432/tcp, :::54322->5432/tcp, 0.0.0.0:8002->8008/tcp, :::8002->8008/tcp        pg2
+7d2c318fb1fb   postgres:16                 "docker-entrypoint.s…"   3 minutes ago   Up 27 seconds   0.0.0.0:54321->5432/tcp, :::54321->5432/tcp, 0.0.0.0:8001->8008/tcp, :::8001->8008/tcp        pg1
+a48ed140fc1a   consul:1.14                 "docker-entrypoint.s…"   3 minutes ago   Up 27 seconds   8300-8302/tcp, 8301-8302/udp, 8600/tcp, 8600/udp, 0.0.0.0:8500->8500/tcp, :::8500->8500/tcp   consul

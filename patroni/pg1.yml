@@ -1,0 +1,46 @@
+scope: ${SCOPE}
+namespace: /db/
+name: pg1
+
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: pg1:8008
+
+consul:
+  host: consul:8500
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+  users:
+    admin:
+      password: admin
+      options:
+        - createrole
+        - createdb
+  post_init: ""
+
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: pg1:5432
+  data_dir: /data/postgres
+  bin_dir: /usr/lib/postgresql/16/bin
+  authentication:
+    replication:
+      username: replicator
+      password: repl_pass
+    superuser:
+      username: postgres
+      password: postgres
+  parameters:
+    max_connections: 100
+    max_wal_senders: 10
+    wal_level: replica
+    archive_mode: "off"
+    hot_standby: "on"
