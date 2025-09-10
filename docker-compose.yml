@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   consul:
     image: consul:1.14
@@ -8,16 +10,18 @@ services:
     networks:
       - patroni_net
 
+  # Patroni base image build
   patroni:
     build:
       context: ./patroni
+    image: ${COMPOSE_PROJECT_NAME:-patroni}_patroni:latest
     container_name: patroni-base
     networks:
       - patroni_net
-    # this service is only a build placeholder; actual nodes are pg1, pg2, pg3
+    # not started; only a build reference for pg1, pg2, pg3
 
   pg1:
-    image: patroni_postgres:latest
+    image: ${COMPOSE_PROJECT_NAME:-patroni}_patroni:latest
     container_name: pg1
     environment:
       - PATRONI_SCOPE=${SCOPE}
@@ -37,14 +41,14 @@ services:
       - patroni_net
 
   pg2:
-    image: patroni_postgres:latest
+    image: ${COMPOSE_PROJECT_NAME:-patroni}_patroni:latest
     container_name: pg2
     environment:
       - PATRONI_SCOPE=${SCOPE}
       - PATRONI_NAME=pg2
       - PATRONI_RESTAPI_CONNECT_ADDRESS=pg2:8008
       - PATRONI_POSTGRESQL_LISTEN=0.0.0.0:5432
-      - PATRONI_ETCD_HOST=consul:8500
+      - PATRONI_CONSUL_HOST=consul:8500
       - PATRONI_POSTGRESQL_DATA_DIR=/data/postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
@@ -59,14 +63,14 @@ services:
       - patroni_net
 
   pg3:
-    image: patroni_postgres:latest
+    image: ${COMPOSE_PROJECT_NAME:-patroni}_patroni:latest
     container_name: pg3
     environment:
       - PATRONI_SCOPE=${SCOPE}
       - PATRONI_NAME=pg3
       - PATRONI_RESTAPI_CONNECT_ADDRESS=pg3:8008
       - PATRONI_POSTGRESQL_LISTEN=0.0.0.0:5432
-      - PATRONI_ETCD_HOST=consul:8500
+      - PATRONI_CONSUL_HOST=consul:8500
       - PATRONI_POSTGRESQL_DATA_DIR=/data/postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
@@ -98,6 +102,7 @@ services:
   barman:
     build:
       context: ./barman
+    image: ${COMPOSE_PROJECT_NAME:-patroni}_barman:latest
     container_name: barman
     depends_on:
       - haproxy
@@ -114,6 +119,7 @@ services:
   app:
     build:
       context: ./app
+    image: ${COMPOSE_PROJECT_NAME:-patroni}_app:latest
     container_name: app
     environment:
       - DATABASE_HOST=haproxy
@@ -136,7 +142,10 @@ services:
     volumes:
       - ./primary/init/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
     entrypoint: ["bash","-c"]
-    command: "until pg_isready -h haproxy -p 5432; do sleep 1; done; PGPASSWORD=${PGAPP_PASSWORD} psql -h haproxy -U ${PGAPP_USER} -d ${POSTGRES_DB} -f /docker-entrypoint-initdb.d/init_db.sql || true; sleep infinity"
+    command: >
+      until pg_isready -h haproxy -p 5432; do sleep 1; done;
+      PGPASSWORD=${PGAPP_PASSWORD} psql -h haproxy -U ${PGAPP_USER} -d ${POSTGRES_DB} -f /docker-entrypoint-initdb.d/init_db.sql || true;
+      sleep infinity
     networks:
       - patroni_net
 
