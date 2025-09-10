@@ -17,14 +17,14 @@ services:
     # this service is only a build placeholder; actual nodes are pg1, pg2, pg3
 
   pg1:
-    image: postgres:16
+    image: patroni_postgres:latest
     container_name: pg1
     environment:
       - PATRONI_SCOPE=${SCOPE}
       - PATRONI_NAME=pg1
       - PATRONI_RESTAPI_CONNECT_ADDRESS=pg1:8008
       - PATRONI_POSTGRESQL_LISTEN=0.0.0.0:5432
-      - PATRONI_ETCD_HOST=consul:8500
+      - PATRONI_CONSUL_HOST=consul:8500
       - PATRONI_POSTGRESQL_DATA_DIR=/data/postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
@@ -32,12 +32,12 @@ services:
       - ./patroni/pg1.yml:/etc/patroni.yml
     ports:
       - "54321:5432"
-      - "80081:8008"
+      - "8001:8008"
     networks:
       - patroni_net
 
   pg2:
-    image: postgres:16
+    image: patroni_postgres:latest
     container_name: pg2
     environment:
       - PATRONI_SCOPE=${SCOPE}
@@ -52,14 +52,14 @@ services:
       - ./patroni/pg2.yml:/etc/patroni.yml
     ports:
       - "54322:5432"
-      - "80082:8008"
+      - "8002:8008"
     depends_on:
       - pg1
     networks:
       - patroni_net
 
   pg3:
-    image: postgres:16
+    image: patroni_postgres:latest
     container_name: pg3
     environment:
       - PATRONI_SCOPE=${SCOPE}
@@ -74,7 +74,7 @@ services:
       - ./patroni/pg3.yml:/etc/patroni.yml
     ports:
       - "54323:5432"
-      - "80083:8008"
+      - "8003:8008"
     depends_on:
       - pg1
       - pg2
